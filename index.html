@@ -1,0 +1,1278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ramp Credit Limit Intelligence - Product Demo</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Inter', Roboto, sans-serif;
+            background: #fafaf9;
+            overflow-x: hidden;
+        }
+        
+        .scene {
+            display: none;
+            min-height: 100vh;
+            padding-bottom: 80px;
+        }
+        
+        .scene.active {
+            display: flex;
+        }
+        
+        /* Sidebar */
+        .sidebar {
+            width: 220px;
+            background: #f5f5f4;
+            border-right: 1px solid #e7e5e4;
+            padding: 16px 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        
+        .sidebar-header {
+            padding: 12px 12px 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .ramp-logo {
+            width: 28px;
+            height: 28px;
+            background: #D4FF00;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        
+        .ramp-logo-small {
+            width: 20px;
+            height: 20px;
+            background: #D4FF00;
+            border-radius: 4px;
+            flex-shrink: 0;
+        }
+        
+        .sidebar-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1c1917;
+        }
+        
+        .nav-item {
+            padding: 10px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 14px;
+            color: #44403c;
+        }
+        
+        .nav-item.active {
+            background: white;
+            font-weight: 500;
+        }
+        
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            overflow: auto;
+            background: #fafaf9;
+        }
+        
+        .content-wrapper {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px;
+        }
+        
+        .content-wrapper-narrow {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 40px;
+        }
+        
+        /* Typography */
+        h1 {
+            font-size: 28px;
+            font-weight: 600;
+            color: #1c1917;
+            margin-bottom: 4px;
+        }
+        
+        h2 {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1c1917;
+            margin-bottom: 16px;
+        }
+        
+        /* Card */
+        .card {
+            background: white;
+            border-radius: 12px;
+            border: 1px solid #e7e5e4;
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+        
+        /* Progress Bar */
+        .progress-bar {
+            height: 8px;
+            background: #f5f5f4;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: #78716c;
+            border-radius: 4px;
+        }
+        
+        /* Alert Box */
+        .alert {
+            background: #fffbeb;
+            border-radius: 12px;
+            border: 1px solid #fbbf24;
+            padding: 20px 24px;
+            display: flex;
+            gap: 16px;
+            align-items: start;
+        }
+        
+        .alert-icon {
+            font-size: 24px;
+            flex-shrink: 0;
+        }
+        
+        /* Button */
+        .btn {
+            padding: 11px 20px;
+            border-radius: 6px;
+            border: none;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+        
+        .btn-primary {
+            background: #D4FF00;
+            color: #1c1917;
+        }
+        
+        .btn-primary:hover {
+            opacity: 0.9;
+            transform: translateY(-1px);
+        }
+        
+        .btn-secondary {
+            background: white;
+            color: #1c1917;
+            border: 1px solid #e7e5e4;
+        }
+        
+        .btn-full {
+            width: 100%;
+        }
+        
+        /* Risk Engine Styles */
+        .risk-engine {
+            background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%);
+            min-height: 100vh;
+            padding: 40px;
+            color: white;
+        }
+        
+        .risk-header {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+        
+        .risk-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 24px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 8px;
+            margin-bottom: 16px;
+        }
+        
+        .risk-box {
+            background: rgba(255,255,255,0.1);
+            padding: 20px 32px;
+            border-radius: 12px;
+            text-align: center;
+            max-width: 400px;
+            margin: 0 auto 20px;
+        }
+        
+        .risk-card {
+            background: rgba(255,255,255,0.05);
+            padding: 24px;
+            border-radius: 12px;
+            border: 1px solid rgba(255,255,255,0.1);
+            margin-bottom: 20px;
+        }
+        
+        /* Slack Styles */
+        .slack {
+            background: #1a1d21;
+            min-height: 100vh;
+        }
+        
+        .slack-header {
+            background: #350d36;
+            padding: 12px 20px;
+            border-bottom: 1px solid #4a154b;
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .slack-content {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 24px;
+        }
+        
+        .slack-message {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        
+        .avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 14px;
+            flex-shrink: 0;
+        }
+        
+        .avatar-admin {
+            background: #4ade80;
+            color: #1c1917;
+        }
+        
+        .avatar-finance {
+            background: #60a5fa;
+            color: white;
+        }
+        
+        .message-header {
+            margin-bottom: 6px;
+        }
+        
+        .message-author {
+            font-weight: 700;
+            color: #d1d5db;
+        }
+        
+        .message-time {
+            font-size: 12px;
+            color: #9ca3af;
+            margin-left: 8px;
+        }
+        
+        .message-text {
+            color: #e5e7eb;
+            fontSize: 14px;
+            line-height: 1.6;
+        }
+        
+        .notification-box {
+            background: #2d3748;
+            border-radius: 8px;
+            padding: 20px;
+            border: 1px solid #4a5568;
+            margin-top: 16px;
+        }
+        
+        .notification-item {
+            background: #1f2937;
+            padding: 16px;
+            border-radius: 6px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        
+        .notification-item.sent {
+            background: #065f46;
+        }
+        
+        /* Success */
+        .success-banner {
+            background: linear-gradient(135deg, #D4FF00 0%, #a3e635 100%);
+            border-radius: 16px;
+            padding: 32px;
+            margin-bottom: 32px;
+            text-align: center;
+        }
+        
+        /* Footer */
+        .footer {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(28, 25, 23, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 16px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-top: 1px solid rgba(255,255,255,0.1);
+            z-index: 1000;
+        }
+        
+        .footer-info {
+            color: white;
+            font-size: 14px;
+        }
+        
+        .footer-buttons {
+            display: flex;
+            gap: 12px;
+        }
+        
+        .hidden {
+            display: none !important;
+        }
+    </style>
+</head>
+<body>
+    <!-- SCENE 1: Dashboard -->
+    <div id="scene1" class="scene active">
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <div class="ramp-logo"></div>
+                <span class="sidebar-title">Ramp</span>
+            </div>
+            <div class="nav-item active">🏠 Overview</div>
+            <div class="nav-item">💳 Expenses</div>
+            <div class="nav-item">📊 Insights</div>
+            <div class="nav-item">🛒 Procurement</div>
+            <div class="nav-item">💰 Bill Pay</div>
+        </div>
+        
+        <div class="main-content">
+            <div class="content-wrapper">
+                <h1>Good evening, Sarah</h1>
+                <p style="font-size: 16px; color: #78716c; margin-bottom: 32px;">You're all caught up!</p>
+                
+                <div class="card">
+                    <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 20px;">
+                        <div>
+                            <div style="font-size: 13px; color: #78716c; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px;">
+                                Company Credit Limit
+                            </div>
+                            <div style="font-size: 32px; font-weight: 600; color: #1c1917;">
+                                $100k
+                            </div>
+                        </div>
+                        <div style="text-align: right;">
+                            <div style="font-size: 13px; color: #78716c; margin-bottom: 6px;">
+                                Current spend
+                            </div>
+                            <div style="font-size: 20px; font-weight: 600; color: #44403c;">
+                                $51k
+                            </div>
+                            <div style="font-size: 13px; color: #78716c;">
+                                51% utilized
+                            </div>
+                        </div>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: 51%;"></div>
+                    </div>
+                </div>
+                
+                <div class="alert">
+                    <div class="alert-icon">⚠️</div>
+                    <div style="flex: 1;">
+                        <div style="font-size: 15px; font-weight: 600; color: #92400e; margin-bottom: 6px;">
+                            Transaction review needed
+                        </div>
+                        <div style="font-size: 14px; color: #78350f; margin-bottom: 12px;">
+                            Amazon Web Services subscription charge of $51k would bring total spend to $102k (2% over current limit)
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 12px; padding-top: 8px;">
+                            <div class="ramp-logo-small"></div>
+                            <div style="font-size: 13px; color: #78350f; font-weight: 500;">
+                                Reviewing approval options...
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <h2 style="margin-top: 32px;">Recent expenses</h2>
+                <div class="card" style="padding: 0; overflow: hidden;">
+                    <div style="padding: 16px 20px; border-bottom: 1px solid #f5f5f4; display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <div style="font-size: 14px; font-weight: 500; color: #1c1917; margin-bottom: 2px;">
+                                $135.40 at Office Depot
+                            </div>
+                            <div style="font-size: 13px; color: #78716c;">
+                                May 29 · Office Supplies
+                            </div>
+                        </div>
+                        <div style="font-size: 12px; color: #16a34a; font-weight: 500; padding: 4px 10px; background: #f0fdf4; border-radius: 4px;">
+                            Paid
+                        </div>
+                    </div>
+                    <div style="padding: 16px 20px; border-bottom: 1px solid #f5f5f4; display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <div style="font-size: 14px; font-weight: 500; color: #1c1917; margin-bottom: 2px;">
+                                $420.00 at GitHub
+                            </div>
+                            <div style="font-size: 13px; color: #78716c;">
+                                May 28 · Software
+                            </div>
+                        </div>
+                        <div style="font-size: 12px; color: #16a34a; font-weight: 500; padding: 4px 10px; background: #f0fdf4; border-radius: 4px;">
+                            Paid
+                        </div>
+                    </div>
+                    <div style="padding: 16px 20px; display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <div style="font-size: 14px; font-weight: 500; color: #1c1917; margin-bottom: 2px;">
+                                $144.00 at Figma
+                            </div>
+                            <div style="font-size: 13px; color: #78716c;">
+                                May 27 · Software
+                            </div>
+                        </div>
+                        <div style="font-size: 12px; color: #16a34a; font-weight: 500; padding: 4px 10px; background: #f0fdf4; border-radius: 4px;">
+                            Paid
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- SCENE 2: Risk Engine -->
+    <div id="scene2" class="scene">
+        <div class="risk-engine" style="width: 100%;">
+            <div style="max-width: 1000px; margin: 0 auto;">
+                <div class="risk-header">
+                    <div class="risk-badge">
+                        <div class="ramp-logo"></div>
+                        <span style="font-size: 18px; font-weight: 600;">Underwriting Agent</span>
+                    </div>
+                    <h2 style="font-size: 24px; font-weight: 600; margin-top: 16px; color: white;">
+                        Risk Assessment: Harvey Inc.
+                    </h2>
+                    <p style="font-size: 14px; opacity: 0.8; margin-top: 8px;">
+                        Transaction ID: TXN-AWS2026JAN
+                    </p>
+                </div>
+                
+                <div style="display: flex; flex-direction: column; gap: 20px; align-items: center;">
+                    <div class="risk-box">
+                        <div style="font-size: 13px; opacity: 0.7; margin-bottom: 8px;">Transaction Request</div>
+                        <div style="font-size: 28px; font-weight: 700;">$51k</div>
+                        <div style="font-size: 14px; margin-top: 4px; opacity: 0.8;">Amazon Web Services</div>
+                    </div>
+                    
+                    <div style="font-size: 24px; opacity: 0.5;">↓</div>
+                    
+                    <div class="risk-card" style="width: 100%;">
+                        <div style="font-size: 15px; font-weight: 600; margin-bottom: 16px; opacity: 0.9;">
+                            📊 Risk Signal Analysis
+                        </div>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                            <div>
+                                <div style="display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 13px;">
+                                    <span style="opacity: 0.8;">Payment History</span>
+                                    <span style="font-weight: 600; color: #4ade80;">100%</span>
+                                </div>
+                                <div class="progress-bar" style="background: rgba(255,255,255,0.1);">
+                                    <div style="width: 100%; height: 100%; background: #4ade80; border-radius: 4px;"></div>
+                                </div>
+                            </div>
+                            <div>
+                                <div style="display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 13px;">
+                                    <span style="opacity: 0.8;">Utilization</span>
+                                    <span style="font-weight: 600; color: #4ade80;">51%</span>
+                                </div>
+                                <div class="progress-bar" style="background: rgba(255,255,255,0.1);">
+                                    <div style="width: 51%; height: 100%; background: #4ade80; border-radius: 4px;"></div>
+                                </div>
+                            </div>
+                            <div>
+                                <div style="display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 13px;">
+                                    <span style="opacity: 0.8;">Transaction Pattern</span>
+                                    <span style="font-weight: 600; color: #4ade80;">95%</span>
+                                </div>
+                                <div class="progress-bar" style="background: rgba(255,255,255,0.1);">
+                                    <div style="width: 95%; height: 100%; background: #4ade80; border-radius: 4px;"></div>
+                                </div>
+                            </div>
+                            <div>
+                                <div style="display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 13px;">
+                                    <span style="opacity: 0.8;">Over-limit %</span>
+                                    <span style="font-weight: 600; color: #4ade80;">2%</span>
+                                </div>
+                                <div class="progress-bar" style="background: rgba(255,255,255,0.1);">
+                                    <div style="width: 2%; height: 100%; background: #4ade80; border-radius: 4px;"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div style="font-size: 24px; opacity: 0.5;">↓</div>
+                    
+                    <div class="risk-card" style="width: 100%;">
+                        <div style="font-size: 15px; font-weight: 600; margin-bottom: 16px; opacity: 0.9;">
+                            🔬 Incremental Exposure Analysis
+                        </div>
+                        <div style="font-family: monospace; font-size: 12px; line-height: 1.8; opacity: 0.9; background: rgba(0,0,0,0.2); padding: 16px; border-radius: 6px;">
+                            <div style="color: #60a5fa;">// Incremental Exposure (new transaction only)</div>
+                            <div>EAD (Exposure at Default): $51k</div>
+                            <div>PD (Probability of Default): 1.8%</div>
+                            <div>LGD (Loss Given Default): 65%</div>
+                            <div style="border-top: 1px solid rgba(255,255,255,0.1); margin-top: 8px; padding-top: 8px;"></div>
+                            <div style="color: #fbbf24;">Expected Loss: $597/yr</div>
+                            <div style="color: #fbbf24;">  (1.8% × 65% × $51k)</div>
+                            <div style="border-top: 1px solid rgba(255,255,255,0.1); margin-top: 8px; padding-top: 8px;"></div>
+                            <div style="color: #4ade80;">Expected Revenue: $6,120/yr</div>
+                            <div style="color: #4ade80;">  (1% net take rate × $51k × 12 months)</div>
+                            <div style="border-top: 1px solid rgba(255,255,255,0.1); margin-top: 8px; padding-top: 8px;"></div>
+                            <div style="color: #4ade80; font-weight: 600;">Net Incremental Return: $5,523/yr</div>
+                            <div style="color: #4ade80; font-weight: 600;">Customer LTV Impact: +$16.6k (3yr)</div>
+                        </div>
+                        <div style="margin-top: 12px; padding: 12px; background: rgba(34, 197, 94, 0.15); border-radius: 6px; border: 1px solid rgba(34, 197, 94, 0.3);">
+                            <div style="font-size: 13px; font-weight: 600; color: #4ade80; margin-bottom: 6px;">
+                                ✓ Approve: Strong risk-adjusted return
+                            </div>
+                            <div style="font-size: 12px; opacity: 0.9;">
+                                $5.5k annual return on $51k incremental exposure = 10.8% return on risk capital
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div style="font-size: 24px; opacity: 0.5;">↓</div>
+                    
+                    <div class="risk-card" style="width: 100%; background: rgba(239, 68, 68, 0.1); border-color: rgba(239, 68, 68, 0.3);">
+                        <div style="font-size: 15px; font-weight: 600; margin-bottom: 16px; color: #ef4444;">
+                            ❌ Rejection Example (Comparison)
+                        </div>
+                        <div style="font-size: 13px; line-height: 1.7; opacity: 0.9;">
+                            <div style="margin-bottom: 8px;"><strong>We would REJECT if:</strong></div>
+                            <div>• PD: 5% (not 1.8%) → Expected Loss: $1,658/yr</div>
+                            <div>• Over limit: 20% (not 2%)</div>
+                            <div>• Utilization: 95% (not 51%)</div>
+                            <div>• Payment history: Late payments present</div>
+                            <div>• Merchant: New/unrecognized (not recurring AWS)</div>
+                            <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid rgba(239, 68, 68, 0.3); color: #ef4444; font-weight: 600;">
+                                → Expected Loss would exceed revenue
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div style="font-size: 24px; opacity: 0.5;">↓</div>
+                    
+                    <div style="background: rgba(34, 197, 94, 0.15); padding: 20px 32px; border-radius: 12px; border: 1px solid rgba(34, 197, 94, 0.3); text-align: center; width: 100%; max-width: 500px;">
+                        <div style="font-size: 18px; font-weight: 600; color: #4ade80; margin-bottom: 8px;">
+                            ✓ Approve with Mitigation Options
+                        </div>
+                        <div style="font-size: 14px; opacity: 0.9; line-height: 1.5;">
+                            Net return: $5.5k/yr on $51k exposure (10.8% return)<br>
+                            Presenting options to maximize customer LTV
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- SCENE 3: Options -->
+    <div id="scene3" class="scene">
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <div class="ramp-logo"></div>
+                <span class="sidebar-title">Ramp</span>
+            </div>
+            <div class="nav-item active">🏠 Overview</div>
+            <div class="nav-item">💳 Expenses</div>
+            <div class="nav-item">📊 Insights</div>
+            <div class="nav-item">🛒 Procurement</div>
+            <div class="nav-item">💰 Bill Pay</div>
+        </div>
+        
+        <div class="main-content">
+            <div class="content-wrapper-narrow">
+                <h1 style="font-size: 24px; margin-bottom: 8px;">Transaction Approval Options</h1>
+                <p style="font-size: 14px; color: #78716c; margin-bottom: 32px;">Amazon Web Services · $51k</p>
+                
+                <div style="background: #eff6ff; border-radius: 12px; border: 1px solid #bfdbfe; padding: 20px; margin-bottom: 32px; display: flex; gap: 12px;">
+                    <div class="ramp-logo-small"></div>
+                    <div style="font-size: 14px; color: #1e40af; line-height: 1.6;">
+                        Your transaction is slightly over the current company limit. We've identified several ways to approve this payment while maintaining responsible spend management.
+                    </div>
+                </div>
+                
+                <div style="display: grid; gap: 16px;">
+                    <!-- Option 1 - Clickable -->
+                    <div class="card" style="cursor: pointer;" onclick="nextScene()">
+                        <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 12px;">
+                            <div>
+                                <h3 style="font-size: 16px; font-weight: 600; color: #1c1917; margin-bottom: 4px;">
+                                    Enable Early Payment
+                                </h3>
+                                <div style="font-size: 13px; color: #78716c;">
+                                    Approves immediately
+                                </div>
+                            </div>
+                            <div style="font-size: 11px; font-weight: 600; color: #16a34a; background: #f0fdf4; padding: 4px 10px; border-radius: 4px;">
+                                RECOMMENDED
+                            </div>
+                        </div>
+                        <p style="font-size: 14px; color: #44403c; line-height: 1.6; margin-bottom: 16px;">
+                            Pay AWS invoices 5 days early to earn 1.5% cashback. This transaction will be approved and future AWS charges will process automatically.
+                        </p>
+                        <div style="background: #fafaf9; padding: 12px 16px; border-radius: 8px; font-size: 13px; color: #16a34a; font-weight: 500; margin-bottom: 12px;">
+                            +$765 cashback this month
+                        </div>
+                        <div style="font-size: 12px; color: #78716c; margin-bottom: 12px;">
+                            • Admin approval<br>• Finance team notified
+                        </div>
+                        <button class="btn btn-primary btn-full" style="margin-top: 8px;">
+                            Review Early Payment Setup
+                        </button>
+                    </div>
+                    
+                    <!-- Option 2 - Disabled -->
+                    <div class="card" style="opacity: 0.6;">
+                        <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 12px;">
+                            <div>
+                                <h3 style="font-size: 16px; font-weight: 600; color: #1c1917; margin-bottom: 4px;">
+                                    Connect Additional Bank Account
+                                </h3>
+                                <div style="font-size: 13px; color: #78716c;">
+                                    5-10 minutes
+                                </div>
+                            </div>
+                        </div>
+                        <p style="font-size: 14px; color: #44403c; line-height: 1.6; margin-bottom: 16px;">
+                            Link another business bank account via Plaid to increase your available credit based on verified cash reserves.
+                        </p>
+                        <div style="background: #fafaf9; padding: 12px 16px; border-radius: 8px; font-size: 13px; color: #16a34a; font-weight: 500; margin-bottom: 12px;">
+                            Instant limit adjustment
+                        </div>
+                        <div style="font-size: 12px; color: #78716c;">
+                            • Admin approval<br>• Bank verification required
+                        </div>
+                    </div>
+                    
+                    <!-- Option 3 - Disabled -->
+                    <div class="card" style="opacity: 0.6;">
+                        <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 12px;">
+                            <div>
+                                <h3 style="font-size: 16px; font-weight: 600; color: #1c1917; margin-bottom: 4px;">
+                                    Request Limit Increase
+                                </h3>
+                                <div style="font-size: 13px; color: #78716c;">
+                                    1-2 business days
+                                </div>
+                            </div>
+                        </div>
+                        <p style="font-size: 14px; color: #44403c; line-height: 1.6; margin-bottom: 16px;">
+                            Submit a formal request to increase your company credit limit based on payment history and business financials.
+                        </p>
+                        <div style="background: #fafaf9; padding: 12px 16px; border-radius: 8px; font-size: 13px; color: #16a34a; font-weight: 500; margin-bottom: 12px;">
+                            Permanent limit adjustment
+                        </div>
+                        <div style="font-size: 12px; color: #78716c;">
+                            • Admin submits request<br>• Underwriting review
+                        </div>
+                    </div>
+                    
+                    <!-- Option 4 - Disabled -->
+                    <div class="card" style="opacity: 0.6;">
+                        <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 12px;">
+                            <div>
+                                <h3 style="font-size: 16px; font-weight: 600; color: #1c1917; margin-bottom: 4px;">
+                                    Explore AP Automation
+                                </h3>
+                                <div style="font-size: 13px; color: #78716c;">
+                                    5-7 business days to implement
+                                </div>
+                            </div>
+                        </div>
+                        <p style="font-size: 14px; color: #44403c; line-height: 1.6; margin-bottom: 16px;">
+                            Transition vendor payments to Ramp AP for better spend visibility and increased limits. Requires procurement team onboarding.
+                        </p>
+                        <div style="background: #fafaf9; padding: 12px 16px; border-radius: 8px; font-size: 13px; color: #16a34a; font-weight: 500; margin-bottom: 12px;">
+                            Est. $6k annual savings
+                        </div>
+                        <div style="font-size: 12px; color: #78716c; margin-bottom: 8px;">
+                            • Procurement team involvement<br>• Vendor migration required
+                        </div>
+                        <div style="font-size: 12px; color: #92400e; font-style: italic;">
+                            Note: Implementation requires coordination
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- SCENE 4: Slack -->
+    <div id="scene4" class="scene">
+        <div class="slack" style="width: 100%;">
+            <div class="slack-header">
+                <div>
+                    <div style="font-size: 16px; font-weight: 700;">#aws-payment-approval</div>
+                    <div style="font-size: 12px; opacity: 0.8;">Sarah Martinez, Alex Chen (Admin)</div>
+                </div>
+                <div style="font-size: 11px; opacity: 0.6;">Created by Ramp Agent</div>
+            </div>
+            
+            <div class="slack-content">
+                <div class="slack-message">
+                    <div class="ramp-logo" style="width: 36px; height: 36px;"></div>
+                    <div style="flex: 1;">
+                        <div class="message-header">
+                            <span class="message-author">Ramp Agent</span>
+                            <span class="message-time">9:24 AM</span>
+                        </div>
+                        <div class="message-text">
+                            I've created this channel to coordinate approval for Sarah's AWS payment ($51k). This transaction is 2% over your current limit.
+                            <br/><br/>
+                            <strong>Recommended solution:</strong> Enable early payment to approve this transaction and earn 1.5% cashback ($765 this month, ~$9.2k annually).
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="notification-box">
+                    <div style="color: #e5e7eb; font-size: 14px; font-weight: 600; margin-bottom: 16px;">
+                        💬 Stakeholder Communication
+                    </div>
+                    
+                    <div id="adminNotif" class="notification-item">
+                        <div>
+                            <div style="color: #e5e7eb; font-size: 14px; font-weight: 500; margin-bottom: 4px;">
+                                Notify Admin (Alex Chen)
+                            </div>
+                            <div style="color: #9ca3af; font-size: 12px;">
+                                Request approval to enable early payment
+                            </div>
+                        </div>
+                        <button onclick="notifyAdmin()" class="btn btn-primary">Send Message</button>
+                    </div>
+                    
+                    <div id="financeNotif" class="notification-item">
+                        <div>
+                            <div style="color: #e5e7eb; font-size: 14px; font-weight: 500; margin-bottom: 4px;">
+                                Notify Finance Team
+                            </div>
+                            <div style="color: #9ca3af; font-size: 12px;">
+                                FYI: Early payment will debit 5 days before due date
+                            </div>
+                        </div>
+                        <button onclick="notifyFinance()" class="btn" style="border: 1px solid #4b5563; background: transparent; color: #e5e7eb;">Send FYI</button>
+                    </div>
+                    
+                    <div id="continueBtn" class="hidden" style="margin-top: 16px;">
+                        <button onclick="nextScene()" class="btn btn-primary btn-full">
+                            Continue to Approval
+                        </button>
+                    </div>
+                </div>
+                
+                <div id="adminResponse" class="hidden" style="margin-top: 20px;">
+                    <div class="slack-message">
+                        <div class="avatar avatar-admin">AC</div>
+                        <div style="flex: 1;">
+                            <div class="message-header">
+                                <span class="message-author">Alex Chen</span>
+                                <span class="message-time">9:26 AM</span>
+                            </div>
+                            <div class="message-text">
+                                Thanks for flagging this. The cashback makes sense. I'll approve the early payment setup.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="financeResponse" class="hidden" style="margin-top: 20px;">
+                    <div class="slack-message">
+                        <div class="avatar avatar-finance">JW</div>
+                        <div style="flex: 1;">
+                            <div class="message-header">
+                                <span class="message-author">Jennifer Wu</span>
+                                <span style="font-size: 11px; color: #9ca3af; margin-left: 6px;">(Finance)</span>
+                                <span class="message-time">9:27 AM</span>
+                            </div>
+                            <div class="message-text">
+                                Got it, I'll watch for the earlier debits. Appreciate the heads up.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- SCENE 5: Approved -->
+    <div id="scene5" class="scene">
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <div class="ramp-logo"></div>
+                <span class="sidebar-title">Ramp</span>
+            </div>
+            <div class="nav-item active">🏠 Overview</div>
+            <div class="nav-item">💳 Expenses</div>
+            <div class="nav-item">📊 Insights</div>
+            <div class="nav-item">🛒 Procurement</div>
+            <div class="nav-item">💰 Bill Pay</div>
+        </div>
+        
+        <div class="main-content">
+            <div class="content-wrapper-narrow">
+                <div class="success-banner">
+                    <div style="font-size: 48px; margin-bottom: 16px;">✓</div>
+                    <h1 style="font-size: 28px; margin-bottom: 8px;">Transaction Approved</h1>
+                    <p style="font-size: 16px; color: #44403c;">
+                        Amazon Web Services payment of $51k will process normally
+                    </p>
+                </div>
+                
+                <div class="card">
+                    <h2>What's new</h2>
+                    <div style="display: flex; flex-direction: column; gap: 16px;">
+                        <div style="display: flex; gap: 12px;">
+                            <div style="font-size: 20px;">💳</div>
+                            <div>
+                                <div style="font-size: 15px; font-weight: 500; color: #1c1917; margin-bottom: 4px;">
+                                    Early payment enabled for AWS
+                                </div>
+                                <div style="font-size: 14px; color: #78716c;">
+                                    Future AWS charges will be paid 5 days early to capture 1.5% cashback
+                                </div>
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 12px;">
+                            <div style="font-size: 20px;">💰</div>
+                            <div>
+                                <div style="font-size: 15px; font-weight: 500; color: #1c1917; margin-bottom: 4px;">
+                                    Earning $765 cashback this month
+                                </div>
+                                <div style="font-size: 14px; color: #78716c;">
+                                    Estimated $9.2k annual cashback on AWS spend
+                                </div>
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 12px;">
+                            <div style="font-size: 20px;">📈</div>
+                            <div>
+                                <div style="font-size: 15px; font-weight: 500; color: #1c1917; margin-bottom: 4px;">
+                                    Merchant-specific limit applied
+                                </div>
+                                <div style="font-size: 14px; color: #78716c;">
+                                    AWS transactions up to $110k will auto-approve
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <div style="font-size: 16px; font-weight: 600; color: #1c1917; margin-bottom: 4px;">
+                                Want to maximize your savings?
+                            </div>
+                            <div style="font-size: 14px; color: #78716c;">
+                                Explore AP Automation to earn cashback on all vendor payments
+                            </div>
+                        </div>
+                        <button class="btn btn-secondary">Learn more</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- SCENE 6: Product Roadmap -->
+    <div id="scene6" class="scene">
+        <div class="risk-engine" style="width: 100%;">
+            <div style="max-width: 1200px; margin: 0 auto;">
+                <div class="risk-header">
+                    <div class="risk-badge">
+                        <div class="ramp-logo"></div>
+                        <span style="font-size: 18px; font-weight: 600;">Product Development Roadmap</span>
+                    </div>
+                    <h2 style="font-size: 24px; font-weight: 600; margin-top: 16px; color: white;">
+                        From Heuristics to Agents: Validation Strategy
+                    </h2>
+                    <p style="font-size: 14px; opacity: 0.8; margin-top: 8px;">
+                        Don't build real-time AI agents first. Build incrementally and validate unit economics at each stage.
+                    </p>
+                </div>
+                
+                <!-- Phase 1 -->
+                <div class="risk-card">
+                    <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 16px;">
+                        <div>
+                            <div style="font-size: 18px; font-weight: 600; color: #4ade80; margin-bottom: 4px;">
+                                Phase 1: Rule-Based Heuristics
+                            </div>
+                            <div style="font-size: 13px; opacity: 0.8;">Week 1 launch • Latency: &lt;100ms</div>
+                        </div>
+                        <div style="background: #4ade80; color: #1e1b4b; padding: 6px 14px; border-radius: 6px; font-size: 12px; font-weight: 700;">
+                            LAUNCH HERE
+                        </div>
+                    </div>
+                    
+                    <div style="font-size: 14px; line-height: 1.7; margin-bottom: 16px;">
+                        <strong>Simple rules that handle 90% of decisions:</strong>
+                    </div>
+                    
+                    <div style="background: rgba(0,0,0,0.2); padding: 14px; border-radius: 6px; font-family: monospace; font-size: 12px; line-height: 1.8; margin-bottom: 16px;">
+                        <div style="color: #60a5fa;">// Auto-approve</div>
+                        <div>if (overLimit &lt; 5% && utilization &lt; 70% && paymentHistory === 100%)</div>
+                        <div style="margin-left: 20px;">→ approve instantly</div>
+                        <div style="margin-top: 8px; color: #60a5fa;">// Auto-decline</div>
+                        <div>if (overLimit > 10% || utilization > 90% || latePayments > 0)</div>
+                        <div style="margin-left: 20px;">→ decline instantly</div>
+                        <div style="margin-top: 8px; color: #60a5fa;">// Manual review</div>
+                        <div>else → queue for ops team review (SLA: 2 hours)</div>
+                    </div>
+                    
+                    <div style="background: rgba(251, 191, 36, 0.15); padding: 12px; border-radius: 6px; border: 1px solid rgba(251, 191, 36, 0.3);">
+                        <div style="font-size: 13px; font-weight: 600; color: #fbbf24; margin-bottom: 6px;">
+                            📊 Validation Milestone (Week 4)
+                        </div>
+                        <div style="font-size: 12px; line-height: 1.6;">
+                            • Measure: Do auto-approved transactions default at &lt;2%?<br>
+                            • Measure: Does manual review queue stay &lt;10% of volume?<br>
+                            • If yes → proceed to Phase 2. If no → tune thresholds.
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Phase 2 -->
+                <div class="risk-card">
+                    <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 16px;">
+                        <div>
+                            <div style="font-size: 18px; font-weight: 600; color: #60a5fa;">
+                                Phase 2: ML Model for Edge Cases
+                            </div>
+                            <div style="font-size: 13px; opacity: 0.8;">Month 3 • Latency: &lt;500ms</div>
+                        </div>
+                    </div>
+                    
+                    <div style="font-size: 14px; line-height: 1.7; margin-bottom: 16px;">
+                        <strong>Model handles the 10% that need nuanced decisions:</strong>
+                    </div>
+                    
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px;">
+                        <div>
+                            <div style="font-size: 13px; font-weight: 600; margin-bottom: 8px;">Model Inputs</div>
+                            <div style="font-size: 12px; line-height: 1.8;">
+                                • Utilization trend (not just point)<br>
+                                • Payment velocity (avg days early)<br>
+                                • Merchant risk score<br>
+                                • Transaction predictability<br>
+                                • Business growth signals
+                            </div>
+                        </div>
+                        <div>
+                            <div style="font-size: 13px; font-weight: 600; margin-bottom: 8px;">Model Output</div>
+                            <div style="font-size: 12px; line-height: 1.8;">
+                                • PD estimate (1.8% vs 5%)<br>
+                                • Confidence score<br>
+                                • If confidence &lt; 80% → manual review<br>
+                                • If confidence > 80% → auto decision
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div style="background: rgba(251, 191, 36, 0.15); padding: 12px; border-radius: 6px; border: 1px solid rgba(251, 191, 36, 0.3);">
+                        <div style="font-size: 13px; font-weight: 600; color: #fbbf24; margin-bottom: 6px;">
+                            📊 Validation Milestone (Month 6)
+                        </div>
+                        <div style="font-size: 12px; line-height: 1.6;">
+                            • A/B test: Model vs heuristics on edge cases<br>
+                            • Measure: Does model reduce false declines by >20%?<br>
+                            • Measure: Does model maintain &lt;2% default rate?<br>
+                            • If yes → proceed to Phase 3. If no → improve features.
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Phase 3 -->
+                <div class="risk-card">
+                    <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 16px;">
+                        <div>
+                            <div style="font-size: 18px; font-weight: 600; color: #a78bfa;">
+                                Phase 3: Agent for Complex Scenarios
+                            </div>
+                            <div style="font-size: 13px; opacity: 0.8;">Month 9-12 • Latency: 30 sec - 5 min (async)</div>
+                        </div>
+                    </div>
+                    
+                    <div style="font-size: 14px; line-height: 1.7; margin-bottom: 16px;">
+                        <strong>Agent handles &lt;5% of transactions that need creativity:</strong>
+                    </div>
+                    
+                    <div style="font-size: 13px; line-height: 1.8; margin-bottom: 16px;">
+                        Agent triggered when:<br>
+                        • Transaction declined BUT customer has good history<br>
+                        • Model uncertainty high (confidence 50-80%)<br>
+                        • Customer value is high (LTV > $100k)<br>
+                        <br>
+                        Agent responsibilities:<br>
+                        • Generate approval options (early pay, add account, etc)<br>
+                        • Estimate benefit of each option ($765 cashback vs $0)<br>
+                        • Create Slack channel to coordinate stakeholders<br>
+                        • NOT real-time - async workflow is fine here
+                    </div>
+                    
+                    <div style="background: rgba(168, 85, 247, 0.15); padding: 12px; border-radius: 6px; border: 1px solid rgba(168, 85, 247, 0.3); margin-bottom: 16px;">
+                        <div style="font-size: 13px; font-weight: 600; color: #a78bfa; margin-bottom: 6px;">
+                            ⚠️ Latency Reality Check
+                        </div>
+                        <div style="font-size: 12px; line-height: 1.6;">
+                            • Don't block transaction on agent (~5 min to generate options)<br>
+                            • Instead: Decline immediately, send notification<br>
+                            • Agent runs async, presents options in Slack<br>
+                            • User re-attempts transaction after option selected<br>
+                            • This is fine! Users understand "needs approval" flow.
+                        </div>
+                    </div>
+                    
+                    <div style="background: rgba(251, 191, 36, 0.15); padding: 12px; border-radius: 6px; border: 1px solid rgba(251, 191, 36, 0.3);">
+                        <div style="font-size: 13px; font-weight: 600; color: #fbbf24; margin-bottom: 6px;">
+                            📊 Validation Milestone (Month 12)
+                        </div>
+                        <div style="font-size: 12px; line-height: 1.6;">
+                            • Measure: Do agent-suggested options convert? (target >60%)<br>
+                            • Measure: Does agent-touched cohort have better LTV? (vs declined)<br>
+                            • Measure: Does agent reduce ops manual review time?<br>
+                            • Calculate: ROI of agent vs cost of running (LLM inference + eng time)
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Summary -->
+                <div style="background: rgba(34, 197, 94, 0.15); padding: 24px; border-radius: 12px; border: 1px solid rgba(34, 197, 94, 0.3); margin-top: 24px;">
+                    <div style="font-size: 16px; font-weight: 600; margin-bottom: 12px; color: #4ade80;">
+                        ✓ Smart Product Strategy: Validate Economics at Each Stage
+                    </div>
+                    <div style="font-size: 14px; line-height: 1.7;">
+                        <strong>Volume distribution after Phase 3:</strong><br>
+                        • 85% auto-approved by heuristics (&lt;100ms)<br>
+                        • 8% approved/declined by model (&lt;500ms)<br>
+                        • 5% handled by agent (30s-5min async)<br>
+                        • 2% manual review by ops<br>
+                        <br>
+                        <strong>Key insight:</strong> Agent is the <em>smallest</em> piece, not the foundation. Build the boring stuff first, add intelligence where it actually matters.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Footer -->
+    <div class="footer">
+        <div class="footer-info">
+            <span id="sceneInfo">Scene 1 of 6: Ramp Dashboard</span>
+        </div>
+        <div class="footer-buttons">
+            <button id="backBtn" onclick="prevScene()" class="btn" style="border: 1px solid rgba(255,255,255,0.2); background: transparent; color: white; display: none;">
+                ← Back
+            </button>
+            <button id="nextBtn" onclick="nextScene()" class="btn btn-primary">
+                Continue →
+            </button>
+            <button id="restartBtn" onclick="restart()" class="btn btn-primary" style="display: none;">
+                ↻ Restart Demo
+            </button>
+        </div>
+    </div>
+    
+    <script>
+        let currentScene = 1;
+        const totalScenes = 6;
+        const sceneNames = [
+            'Ramp Dashboard',
+            'Risk Engine Analysis',
+            'Approval Options',
+            'Stakeholder Coordination',
+            'Transaction Approved',
+            'Product Development Roadmap'
+        ];
+        
+        let adminNotified = false;
+        let financeNotified = false;
+        
+        function updateScene() {
+            // Hide all scenes
+            for (let i = 1; i <= totalScenes; i++) {
+                document.getElementById('scene' + i).classList.remove('active');
+            }
+            
+            // Show current scene
+            document.getElementById('scene' + currentScene).classList.add('active');
+            
+            // Update footer
+            document.getElementById('sceneInfo').textContent = 
+                `Scene ${currentScene} of ${totalScenes}: ${sceneNames[currentScene - 1]}`;
+            
+            // Update buttons
+            const backBtn = document.getElementById('backBtn');
+            const nextBtn = document.getElementById('nextBtn');
+            const restartBtn = document.getElementById('restartBtn');
+            
+            // Back button (hide on scene 1, 3, 4)
+            if (currentScene > 1 && currentScene !== 3 && currentScene !== 4) {
+                backBtn.style.display = 'block';
+            } else {
+                backBtn.style.display = 'none';
+            }
+            
+            // Next button (hide on scene 3, 4, 6)
+            if (currentScene === 3 || currentScene === 4 || currentScene === 6) {
+                nextBtn.style.display = 'none';
+            } else {
+                nextBtn.style.display = 'block';
+            }
+            
+            // Restart button (only on scene 6)
+            if (currentScene === 6) {
+                restartBtn.style.display = 'block';
+            } else {
+                restartBtn.style.display = 'none';
+            }
+        }
+        
+        function nextScene() {
+            if (currentScene < totalScenes) {
+                currentScene++;
+                updateScene();
+                window.scrollTo(0, 0);
+            }
+        }
+        
+        function prevScene() {
+            if (currentScene > 1) {
+                currentScene--;
+                updateScene();
+                window.scrollTo(0, 0);
+            }
+        }
+        
+        function restart() {
+            currentScene = 1;
+            adminNotified = false;
+            financeNotified = false;
+            
+            // Reset Slack scene
+            document.getElementById('adminNotif').classList.remove('sent');
+            document.getElementById('adminNotif').innerHTML = `
+                <div>
+                    <div style="color: #e5e7eb; font-size: 14px; font-weight: 500; margin-bottom: 4px;">
+                        Notify Admin (Alex Chen)
+                    </div>
+                    <div style="color: #9ca3af; font-size: 12px;">
+                        Request approval to enable early payment
+                    </div>
+                </div>
+                <button onclick="notifyAdmin()" class="btn btn-primary">Send Message</button>
+            `;
+            
+            document.getElementById('financeNotif').classList.remove('sent');
+            document.getElementById('financeNotif').innerHTML = `
+                <div>
+                    <div style="color: #e5e7eb; font-size: 14px; font-weight: 500; margin-bottom: 4px;">
+                        Notify Finance Team
+                    </div>
+                    <div style="color: #9ca3af; font-size: 12px;">
+                        FYI: Early payment will debit 5 days before due date
+                    </div>
+                </div>
+                <button onclick="notifyFinance()" class="btn" style="border: 1px solid #4b5563; background: transparent; color: #e5e7eb;">Send FYI</button>
+            `;
+            
+            document.getElementById('continueBtn').classList.add('hidden');
+            document.getElementById('adminResponse').classList.add('hidden');
+            document.getElementById('financeResponse').classList.add('hidden');
+            
+            updateScene();
+            window.scrollTo(0, 0);
+        }
+        
+        function notifyAdmin() {
+            adminNotified = true;
+            document.getElementById('adminNotif').classList.add('sent');
+            document.getElementById('adminNotif').innerHTML = `
+                <div>
+                    <div style="color: #e5e7eb; font-size: 14px; font-weight: 500; margin-bottom: 4px;">
+                        Notify Admin (Alex Chen)
+                    </div>
+                    <div style="color: #9ca3af; font-size: 12px;">
+                        Request approval to enable early payment
+                    </div>
+                </div>
+                <div style="color: #10b981; font-size: 13px; font-weight: 600;">✓ Sent</div>
+            `;
+            document.getElementById('adminResponse').classList.remove('hidden');
+            checkContinue();
+        }
+        
+        function notifyFinance() {
+            financeNotified = true;
+            document.getElementById('financeNotif').classList.add('sent');
+            document.getElementById('financeNotif').innerHTML = `
+                <div>
+                    <div style="color: #e5e7eb; font-size: 14px; font-weight: 500; margin-bottom: 4px;">
+                        Notify Finance Team
+                    </div>
+                    <div style="color: #9ca3af; font-size: 12px;">
+                        FYI: Early payment will debit 5 days before due date
+                    </div>
+                </div>
+                <div style="color: #10b981; font-size: 13px; font-weight: 600;">✓ Sent</div>
+            `;
+            document.getElementById('financeResponse').classList.remove('hidden');
+            checkContinue();
+        }
+        
+        function checkContinue() {
+            if (adminNotified && financeNotified) {
+                document.getElementById('continueBtn').classList.remove('hidden');
+            }
+        }
+        
+        // Initialize
+        updateScene();
+    </script>
+</body>
+</html>
